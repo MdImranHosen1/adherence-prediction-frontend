@@ -211,7 +211,40 @@ npm test
 
 ## 🚀 Deployment
 
-### Deploy to Production
+### Deploy to GitHub Pages
+
+This project is configured to deploy to GitHub Pages. Follow these steps:
+
+1. **Ensure your repository is pushed to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push origin main
+   ```
+
+2. **Deploy to GitHub Pages:**
+   ```bash
+   npm run deploy
+   ```
+
+   This command will:
+   - Build the application
+   - Create a `gh-pages` branch (if it doesn't exist)
+   - Push the build files to the `gh-pages` branch
+
+3. **Configure GitHub Pages:**
+   - Go to your repository on GitHub
+   - Navigate to **Settings** → **Pages**
+   - Under "Source", select the `gh-pages` branch
+   - Click **Save**
+
+4. **Access your deployed app:**
+   - Your app will be available at: `https://mdimranhosen1.github.io/adherence-prediction-frontend`
+   - It may take a few minutes for the first deployment
+
+### Deploy to Other Production Environments
+
+If you want to deploy to other hosting services:
 
 1. Build the application:
    ```bash
