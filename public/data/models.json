@@ -1,0 +1,28 @@
+{
+  "models": [
+    {
+      "model_id": "model_1",
+      "version": "v1.0",
+      "training_date": "2025-10-01",
+      "accuracy": 0.82,
+      "algorithm": "Random Forest",
+      "status": "available"
+    },
+    {
+      "model_id": "model_2",
+      "version": "v1.2.0",
+      "training_date": "2025-10-25",
+      "accuracy": 0.85,
+      "algorithm": "XGBoost Classifier",
+      "status": "deployed"
+    },
+    {
+      "model_id": "model_3",
+      "version": "v1.3.0-beta",
+      "training_date": "2025-11-05",
+      "accuracy": 0.87,
+      "algorithm": "LightGBM",
+      "status": "testing"
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "features": [
+    {
+      "name": "PERFORMANCE_ID",
+      "type": "integer",
+      "description": "ECOG Performance status (0-2)",
+      "allowed_values": [0, 1, 2],
+      "required": true,
+      "categorical": true
+    },
+    {
+      "name": "agecat",
+      "type": "integer",
+      "description": "Age category",
+      "allowed_values": [1, 2],
+      "required": true,
+      "categorical": true
+    },
+    {
+      "name": "Hx_oth_cancer",
+      "type": "integer",
+      "description": "History of other cancer",
+      "allowed_values": [0, 1],
+      "required": true,
+      "categorical": true
+    },
+    {
+      "name": "stable_weigh",
+      "type": "integer",
+      "description": "Stable weight indicator",
+      "allowed_values": [1, 2],
+      "required": true,
+      "categorical": true
+    },
+    {
+      "name": "num_lymph_node_examined",
+      "type": "integer",
+      "description": "Number of lymph nodes examined",
+      "min_value": 0,
+      "max_value": 100,
+      "required": true,
+      "categorical": false
+    },
+    {
+      "name": "num_pos_lymph_node",
+      "type": "integer",
+      "description": "Number of positive lymph nodes",
+      "min_value": 0,
+      "max_value": 100,
+      "required": true,
+      "categorical": false
+    },
+    {
+      "name": "No_cardiact_condition",
+      "type": "integer",
+      "description": "No cardiac condition",
+      "allowed_values": [0, 1],
+      "required": true,
+      "categorical": true
+    },
+    {
+      "name": "T_stage",
+      "type": "integer",
+      "description": "Tumor stage",
+      "allowed_values": [1, 2, 3, 4],
+      "required": true,
+      "categorical": true
+    },
+    {
+      "name": "N_stage",
+      "type": "integer",
+      "description": "Node stage",
+      "allowed_values": [0, 1, 2, 3],
+      "required": true,
+      "categorical": true
+    },
+    {
+      "name": "M_stage",
+      "type": "integer",
+      "description": "Metastasis stage",
+      "allowed_values": [0, 1],
+      "required": true,
+      "categorical": true
+    }
+  ],
+  "total_features": 35,
+  "categorical_features": 25,
+  "numerical_features": 10
+}

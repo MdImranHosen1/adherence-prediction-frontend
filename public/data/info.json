@@ -1,0 +1,25 @@
+{
+  "model_name": "AdherencePredictionModel",
+  "version": "v1.2.0",
+  "training_date": "2025-10-25",
+  "algorithm": "XGBoost Classifier",
+  "performance_metrics": {
+    "accuracy": 0.85,
+    "precision": 0.82,
+    "recall": 0.87,
+    "f1_score": 0.845,
+    "roc_auc": 0.91
+  },
+  "features": [
+    "PERFORMANCE_ID", "Hx_oth_cancer", "stable_weigh", "No_cardiact_condition", 
+    "agecat", "examed_by_radiation_oncologist", "bilateral_renal_function", 
+    "prior_chemo", "prior_radiation", "Gastro_esophageal_junction", "cardia", 
+    "fundus", "body_corpus", "antrum", "pylorus_pyloric_channel", 
+    "greater_curvature", "lesser_curvature", "stomach_NOS", "Histologic_grade", 
+    "num_lymph_node_examined", "num_pos_lymph_node", "T_stage", "N_stage", 
+    "M_stage", "T2N0M0_spec", "PD_location", "ETHNIC_ID", "SEX_ID", "RACE_ID", 
+    "TREAT_ASSIGNED", "STRATUM_GRP_ID"
+  ],
+  "target": "offtrt_reason",
+  "description": "Predicts whether a patient will complete treatment (1) or not (0)."
+}

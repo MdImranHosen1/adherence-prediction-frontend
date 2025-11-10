@@ -1,0 +1,72 @@
+{
+  "page": 1,
+  "size": 10,
+  "total_predictions": 150,
+  "predictions": [
+    {
+      "prediction_id": "pred_1",
+      "timestamp": "2025-11-10T12:00:00Z",
+      "input_features": {
+        "PERFORMANCE_ID": 1,
+        "Hx_oth_cancer": 1,
+        "stable_weigh": 2,
+        "agecat": 1
+      },
+      "prediction": "Good Subject",
+      "model_name": "AdherencePredictionModel",
+      "probability": 0.87
+    },
+    {
+      "prediction_id": "pred_2",
+      "timestamp": "2025-11-10T11:45:00Z",
+      "input_features": {
+        "PERFORMANCE_ID": 0,
+        "Hx_oth_cancer": 0,
+        "stable_weigh": 1,
+        "agecat": 2
+      },
+      "prediction": "Bad Subject",
+      "model_name": "AdherencePredictionModel",
+      "probability": 0.72
+    },
+    {
+      "prediction_id": "pred_3",
+      "timestamp": "2025-11-10T11:30:00Z",
+      "input_features": {
+        "PERFORMANCE_ID": 1,
+        "Hx_oth_cancer": 1,
+        "stable_weigh": 2,
+        "agecat": 1
+      },
+      "prediction": "Good Subject",
+      "model_name": "AdherencePredictionModel",
+      "probability": 0.91
+    },
+    {
+      "prediction_id": "pred_4",
+      "timestamp": "2025-11-10T11:15:00Z",
+      "input_features": {
+        "PERFORMANCE_ID": 2,
+        "Hx_oth_cancer": 0,
+        "stable_weigh": 1,
+        "agecat": 2
+      },
+      "prediction": "Bad Subject",
+      "model_name": "AdherencePredictionModel",
+      "probability": 0.68
+    },
+    {
+      "prediction_id": "pred_5",
+      "timestamp": "2025-11-10T11:00:00Z",
+      "input_features": {
+        "PERFORMANCE_ID": 1,
+        "Hx_oth_cancer": 1,
+        "stable_weigh": 2,
+        "agecat": 1
+      },
+      "prediction": "Good Subject",
+      "model_name": "AdherencePredictionModel",
+      "probability": 0.85
+    }
+  ]
+}
