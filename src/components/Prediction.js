@@ -20,34 +20,37 @@ import {
   TableRow,
   ToggleButton,
   ToggleButtonGroup,
-  Divider,
   InputAdornment,
   IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Collapse,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  FormHelperText,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   PlayArrow,
   ContentPaste,
-  CheckCircle,
-  Cancel,
   TrendingUp,
   Assessment,
   Search,
   Close,
   History as HistoryIcon,
   Visibility,
-  ExpandMore,
-  ExpandLess,
+  UploadFile,
+  Edit,
+  Code,
 } from '@mui/icons-material';
 import {
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
   Tooltip,
   Legend,
   BarChart,
@@ -66,6 +69,44 @@ function Prediction() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
+  // Input method states
+  const [inputMethod, setInputMethod] = useState('json'); // 'json' or 'form' or 'csv'
+  const [formData, setFormData] = useState({
+    PERFORMANCE_ID: '',
+    Hx_oth_cancer: '',
+    stable_weigh: '',
+    examed_by_radiation_oncologist: '',
+    bilateral_renal_function: '',
+    No_cardiact_condition: '',
+    prior_chemo: '',
+    prior_radiation: '',
+    Gastro_esophageal_junction: '',
+    cardia: '',
+    fundus: '',
+    body_corpus: '',
+    antrum: '',
+    pylorus_pyloric_channel: '',
+    greater_curvature: '',
+    lesser_curvature: '',
+    stomach_NOS: '',
+    Histologic_grade: '',
+    num_lymph_node_examined: '',
+    num_pos_lymph_node: '',
+    T_stage: '',
+    N_stage: '',
+    M_stage: '',
+    T2N0M0_spec: '',
+    PD_location: '',
+    ETHNIC_ID: '',
+    SEX_ID: '',
+    RACE_ID: '',
+    TREAT_ASSIGNED: '',
+    STRATUM_GRP_ID: '',
+    agecat: ''
+  });
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvData, setCsvData] = useState([]);
+  
   // History states
   const [historyData, setHistoryData] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -78,6 +119,7 @@ function Prediction() {
   // Fetch prediction history on component mount
   useEffect(() => {
     fetchHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const fetchHistory = async () => {
@@ -92,26 +134,96 @@ function Prediction() {
     }
   };
 
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleCsvUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setCsvFile(file);
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        const parsedData = lines.slice(1).map(line => {
+          const values = line.split(',').map(v => v.trim());
+          const obj = {};
+          headers.forEach((header, index) => {
+            const value = values[index];
+            // Convert to number if possible, otherwise keep as string
+            obj[header] = isNaN(value) || value === '' ? value : Number(value);
+          });
+          return obj;
+        });
+
+        setCsvData(parsedData);
+        setError(null);
+      } catch (err) {
+        setError('Failed to parse CSV file. Please check the format.');
+        console.error(err);
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
   const handlePredict = async () => {
     try {
       setLoading(true);
       setError(null);
-      const parsedData = JSON.parse(inputData);
 
-      let result;
+      let parsedData;
+      
       if (predictionType === 'single') {
-        result = await predictSingle(parsedData);
+        if (inputMethod === 'form') {
+          // Use form data
+          parsedData = { ...formData };
+          // Convert string values to numbers where appropriate
+          Object.keys(parsedData).forEach(key => {
+            const value = parsedData[key];
+            if (value !== '' && !isNaN(value)) {
+              parsedData[key] = Number(value);
+            } else if (value === '' || value === null) {
+              parsedData[key] = null;
+            }
+          });
+        } else {
+          // Use JSON input
+          parsedData = JSON.parse(inputData);
+        }
+        const result = await predictSingle(parsedData);
+        setPredictionResult(result);
       } else {
-        // For batch predictions, expect an array
-        const dataArray = Array.isArray(parsedData) ? parsedData : [parsedData];
-        result = await predictBatch(dataArray);
+        // Batch predictions
+        if (inputMethod === 'csv') {
+          // Use CSV data
+          if (csvData.length === 0) {
+            setError('Please upload a CSV file first');
+            return;
+          }
+          parsedData = csvData;
+        } else {
+          // Use JSON input
+          parsedData = JSON.parse(inputData);
+          parsedData = Array.isArray(parsedData) ? parsedData : [parsedData];
+        }
+        const result = await predictBatch(parsedData);
+        setPredictionResult(result);
       }
 
-      setPredictionResult(result);
       // Refresh history after successful prediction
       fetchHistory();
     } catch (err) {
-      setError('Invalid JSON format or prediction failed');
+      setError('Invalid input format or prediction failed: ' + err.message);
       console.error(err);
     } finally {
       setLoading(false);
@@ -159,10 +271,81 @@ function Prediction() {
 
   const loadSample = () => {
     if (predictionType === 'single') {
-      setInputData(JSON.stringify(sampleSingleInput, null, 2));
+      if (inputMethod === 'form') {
+        setFormData({
+          PERFORMANCE_ID: 1,
+          Hx_oth_cancer: 1,
+          stable_weigh: 2,
+          examed_by_radiation_oncologist: 1,
+          bilateral_renal_function: 1,
+          No_cardiact_condition: 1,
+          prior_chemo: 0,
+          prior_radiation: 0,
+          Gastro_esophageal_junction: 0,
+          cardia: 0,
+          fundus: 0,
+          body_corpus: 1,
+          antrum: 0,
+          pylorus_pyloric_channel: 0,
+          greater_curvature: 0,
+          lesser_curvature: 0,
+          stomach_NOS: 0,
+          Histologic_grade: 3,
+          num_lymph_node_examined: 7,
+          num_pos_lymph_node: 0,
+          T_stage: 2,
+          N_stage: 0,
+          M_stage: 0,
+          T2N0M0_spec: 2,
+          PD_location: null,
+          ETHNIC_ID: 1,
+          SEX_ID: 1,
+          RACE_ID: 1,
+          TREAT_ASSIGNED: 2,
+          STRATUM_GRP_ID: 1,
+          agecat: 1
+        });
+      } else {
+        setInputData(JSON.stringify(sampleSingleInput, null, 2));
+      }
     } else {
       setInputData(JSON.stringify(sampleBatchInput, null, 2));
     }
+  };
+
+  // Field configurations for form
+  const fieldConfigs = {
+    PERFORMANCE_ID: { label: 'Performance Status', type: 'select', options: [0, 1, 2] },
+    Hx_oth_cancer: { label: 'History of Other Cancer', type: 'select', options: [0, 1] },
+    stable_weigh: { label: 'Stable Weight', type: 'select', options: [1, 2] },
+    examed_by_radiation_oncologist: { label: 'Examined by Radiation Oncologist', type: 'select', options: [0, 1] },
+    bilateral_renal_function: { label: 'Bilateral Renal Function', type: 'select', options: [0, 1] },
+    No_cardiact_condition: { label: 'No Cardiac Condition', type: 'select', options: [0, 1] },
+    prior_chemo: { label: 'Prior Chemotherapy', type: 'select', options: [0, 1] },
+    prior_radiation: { label: 'Prior Radiation', type: 'select', options: [0, 1] },
+    Gastro_esophageal_junction: { label: 'Gastroesophageal Junction', type: 'select', options: [0, 1] },
+    cardia: { label: 'Cardia', type: 'select', options: [0, 1] },
+    fundus: { label: 'Fundus', type: 'select', options: [0, 1] },
+    body_corpus: { label: 'Body/Corpus', type: 'select', options: [0, 1] },
+    antrum: { label: 'Antrum', type: 'select', options: [0, 1] },
+    pylorus_pyloric_channel: { label: 'Pylorus/Pyloric Channel', type: 'select', options: [0, 1] },
+    greater_curvature: { label: 'Greater Curvature', type: 'select', options: [0, 1] },
+    lesser_curvature: { label: 'Lesser Curvature', type: 'select', options: [0, 1] },
+    stomach_NOS: { label: 'Stomach NOS', type: 'select', options: [0, 1] },
+    Histologic_grade: { label: 'Histologic Grade', type: 'select', options: [1, 2, 3, 4] },
+    num_lymph_node_examined: { label: 'Number of Lymph Nodes Examined', type: 'number', min: 0 },
+    num_pos_lymph_node: { label: 'Number of Positive Lymph Nodes', type: 'number', min: 0 },
+    T_stage: { label: 'T Stage', type: 'select', options: [0, 1, 2, 3, 4] },
+    N_stage: { label: 'N Stage', type: 'select', options: [0, 1, 2, 3] },
+    M_stage: { label: 'M Stage', type: 'select', options: [0, 1] },
+    T2N0M0_spec: { label: 'T2N0M0 Specification', type: 'select', options: [1, 2, 3] },
+    PD_location: { label: 'PD Location', type: 'text' },
+    ETHNIC_ID: { label: 'Ethnicity', type: 'select', options: [1, 2, 3] },
+    SEX_ID: { label: 'Sex', type: 'select', options: [1, 2] },
+    RACE_ID: { label: 'Race', type: 'select', options: [1, 2, 3, 4, 5] },
+    TREAT_ASSIGNED: { label: 'Treatment Assigned', type: 'select', options: [1, 2] },
+    STRATUM_GRP_ID: { label: 'Stratum Group', type: 'select', options: [1, 2, 3] },
+    agecat: { label: 'Age Category', type: 'select', options: [1, 2, 3, 4] }
   };
 
   // Prepare chart data for batch predictions
@@ -243,38 +426,232 @@ function Prediction() {
               Load Sample
             </Button>
           </Box>
-          
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Enter JSON data {predictionType === 'batch' ? '(array of objects)' : '(single object)'}
-          </Typography>
 
-          <TextField
-            fullWidth
-            multiline
-            rows={15}
-            value={inputData}
-            onChange={(e) => setInputData(e.target.value)}
-            placeholder={JSON.stringify(
-              predictionType === 'single' ? sampleSingleInput : sampleBatchInput,
-              null,
-              2
-            )}
-            variant="outlined"
-            sx={{
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                fontFamily: 'monospace',
-                fontSize: '13px',
-              }
-            }}
-          />
+          {/* Input Method Tabs */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={inputMethod} 
+              onChange={(e, newValue) => {
+                setInputMethod(newValue);
+                setPredictionResult(null);
+              }}
+              aria-label="input method tabs"
+            >
+              <Tab 
+                icon={<Code />} 
+                iconPosition="start" 
+                label="JSON Input" 
+                value="json" 
+              />
+              {predictionType === 'single' && (
+                <Tab 
+                  icon={<Edit />} 
+                  iconPosition="start" 
+                  label="Form Input" 
+                  value="form" 
+                />
+              )}
+              {predictionType === 'batch' && (
+                <Tab 
+                  icon={<UploadFile />} 
+                  iconPosition="start" 
+                  label="CSV Upload" 
+                  value="csv" 
+                />
+              )}
+            </Tabs>
+          </Box>
+
+          {/* JSON Input */}
+          {inputMethod === 'json' && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Enter JSON data {predictionType === 'batch' ? '(array of objects)' : '(single object)'}
+              </Typography>
+
+              <TextField
+                fullWidth
+                multiline
+                rows={15}
+                value={inputData}
+                onChange={(e) => setInputData(e.target.value)}
+                placeholder={JSON.stringify(
+                  predictionType === 'single' ? sampleSingleInput : sampleBatchInput,
+                  null,
+                  2
+                )}
+                variant="outlined"
+                sx={{
+                  mb: 2,
+                  '& .MuiOutlinedInput-root': {
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                  }
+                }}
+              />
+            </Box>
+          )}
+
+          {/* Form Input (Single Prediction Only) */}
+          {inputMethod === 'form' && predictionType === 'single' && (
+            <Box>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Fill in the form below to make a prediction. Required fields are marked with *.
+              </Alert>
+              
+              <Grid container spacing={2}>
+                {Object.entries(fieldConfigs).map(([fieldName, config]) => (
+                  <Grid item xs={12} sm={6} md={4} key={fieldName}>
+                    {config.type === 'select' ? (
+                      <FormControl fullWidth size="small">
+                        <InputLabel>{config.label}</InputLabel>
+                        <Select
+                          value={formData[fieldName]}
+                          label={config.label}
+                          onChange={(e) => handleFormChange(fieldName, e.target.value)}
+                        >
+                          <MenuItem value="">
+                            <em>None</em>
+                          </MenuItem>
+                          {config.options.map(option => (
+                            <MenuItem key={option} value={option}>
+                              {option === 0 ? 'No' : option === 1 ? 'Yes' : option}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        <FormHelperText>{fieldName}</FormHelperText>
+                      </FormControl>
+                    ) : config.type === 'number' ? (
+                      <TextField
+                        fullWidth
+                        size="small"
+                        type="number"
+                        label={config.label}
+                        value={formData[fieldName]}
+                        onChange={(e) => handleFormChange(fieldName, e.target.value)}
+                        inputProps={{ min: config.min || 0 }}
+                        helperText={fieldName}
+                      />
+                    ) : (
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label={config.label}
+                        value={formData[fieldName] || ''}
+                        onChange={(e) => handleFormChange(fieldName, e.target.value)}
+                        helperText={fieldName}
+                      />
+                    )}
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+
+          {/* CSV Upload (Batch Prediction Only) */}
+          {inputMethod === 'csv' && predictionType === 'batch' && (
+            <Box>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Upload a CSV file containing multiple records for batch prediction. 
+                The first row should contain column headers matching the model's expected features.
+                <Button
+                  size="small"
+                  variant="outlined"
+                  sx={{ ml: 2 }}
+                  href="/sample_batch_prediction.csv"
+                  download="sample_batch_prediction.csv"
+                >
+                  Download Sample CSV
+                </Button>
+              </Alert>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 4,
+                  textAlign: 'center',
+                  border: '2px dashed #cbd5e1',
+                  bgcolor: '#f8fafc',
+                  mb: 3,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: '#f1f5f9',
+                    borderColor: '#94a3b8'
+                  }
+                }}
+              >
+                <input
+                  accept=".csv"
+                  style={{ display: 'none' }}
+                  id="csv-upload-input"
+                  type="file"
+                  onChange={handleCsvUpload}
+                />
+                <label htmlFor="csv-upload-input">
+                  <Box sx={{ cursor: 'pointer' }}>
+                    <UploadFile sx={{ fontSize: 48, color: '#64748b', mb: 2 }} />
+                    <Typography variant="h6" sx={{ mb: 1, color: '#475569' }}>
+                      {csvFile ? csvFile.name : 'Click to upload CSV file'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      or drag and drop your file here
+                    </Typography>
+                    {csvFile && (
+                      <Chip 
+                        label={`${csvData.length} records loaded`}
+                        color="success"
+                        sx={{ mt: 2 }}
+                      />
+                    )}
+                  </Box>
+                </label>
+              </Paper>
+
+              {csvData.length > 0 && (
+                <Paper elevation={1} sx={{ p: 2, mb: 2, maxHeight: 400, overflow: 'auto' }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                    Preview (First 5 rows)
+                  </Typography>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                          {Object.keys(csvData[0]).map(header => (
+                            <TableCell key={header} sx={{ fontWeight: 600, fontSize: '12px' }}>
+                              {header}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {csvData.slice(0, 5).map((row, index) => (
+                          <TableRow key={index} hover>
+                            {Object.values(row).map((value, idx) => (
+                              <TableCell key={idx} sx={{ fontSize: '12px' }}>
+                                {value === null || value === '' ? '-' : String(value)}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Paper>
+              )}
+            </Box>
+          )}
 
           <Button
             variant="contained"
             size="large"
             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
             onClick={handlePredict}
-            disabled={loading || !inputData}
+            disabled={
+              loading || 
+              (inputMethod === 'json' && !inputData) || 
+              (inputMethod === 'csv' && csvData.length === 0)
+            }
+            sx={{ mt: 2 }}
           >
             {loading ? 'Predicting...' : 'Make Prediction'}
           </Button>
