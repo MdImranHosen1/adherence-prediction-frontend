@@ -2,7 +2,7 @@
   "name": "adherence-prediction-frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://mdimranhosen1.github.io/adherence-prediction-frontend",
+  "homepage": ".",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
