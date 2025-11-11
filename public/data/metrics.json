@@ -6,6 +6,10 @@
   "f1_score": 0.845,
   "roc_auc": 0.91,
   "last_evaluated": "2025-10-25T15:00:00Z",
+  "response_time_ms": 42,
+  "inference_time_ms": 15,
+  "memory_mb": 156,
+  "uptime_hours": 1248,
   "confusion_matrix": {
     "true_positive": 152,
     "false_positive": 25,

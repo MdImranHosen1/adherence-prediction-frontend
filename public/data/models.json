@@ -2,27 +2,42 @@
   "models": [
     {
       "model_id": "model_1",
-      "version": "v1.0",
+      "name": "AdherencePredict v1.0",
+      "version": "1.0",
       "training_date": "2025-10-01",
       "accuracy": 0.82,
+      "precision": 0.80,
+      "recall": 0.83,
+      "f1_score": 0.815,
       "algorithm": "Random Forest",
-      "status": "available"
+      "status": "available",
+      "is_active": false
     },
     {
       "model_id": "model_2",
-      "version": "v1.2.0",
+      "name": "AdherencePredict v1.2",
+      "version": "1.2.0",
       "training_date": "2025-10-25",
       "accuracy": 0.85,
+      "precision": 0.82,
+      "recall": 0.87,
+      "f1_score": 0.845,
       "algorithm": "XGBoost Classifier",
-      "status": "deployed"
+      "status": "deployed",
+      "is_active": true
     },
     {
       "model_id": "model_3",
-      "version": "v1.3.0-beta",
+      "name": "AdherencePredict v1.3 Beta",
+      "version": "1.3.0-beta",
       "training_date": "2025-11-05",
       "accuracy": 0.87,
+      "precision": 0.85,
+      "recall": 0.89,
+      "f1_score": 0.870,
       "algorithm": "LightGBM",
-      "status": "testing"
+      "status": "testing",
+      "is_active": false
     }
   ]
 }
