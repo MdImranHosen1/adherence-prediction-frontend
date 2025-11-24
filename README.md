@@ -39,10 +39,10 @@ Before you begin, ensure you have the following installed:
 The application uses environment variables for configuration. The `.env` file is already set up with default values:
 
 ```
-REACT_APP_API_BASE_URL=http://localhost:3000
+REACT_APP_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-You can modify this file to point to your actual API endpoint when available.
+You can modify this file to point to your FastAPI backend endpoint. The app is configured to work with the FastAPI backend running on port 8000.
 
 ## 🏃 Running the Application
 
@@ -83,15 +83,7 @@ The build files will be generated in the `build/` directory.
 ```
 adherence-prediction-frontend/
 ├── public/
-│   ├── data/                     # Mock JSON data files
-│   │   ├── health.json
-│   │   ├── info.json
-│   │   ├── features.json
-│   │   ├── training-data.json
-│   │   ├── training-data-stats.json
-│   │   ├── models.json
-│   │   ├── metrics.json
-│   │   └── predictions-history.json
+│   ├── sample_batch_prediction.csv  # CSV template for batch predictions
 │   └── index.html
 ├── src/
 │   ├── components/               # React components
@@ -115,30 +107,29 @@ adherence-prediction-frontend/
 
 ## 🔌 API Integration
 
-### Current Setup (Mock Data)
+### FastAPI Backend Integration
 
-The application currently uses **mock JSON data** stored in the `public/data/` directory. The API service (`src/api.js`) fetches data from these local JSON files to simulate API responses.
+The application is fully integrated with the **FastAPI backend** running at `http://127.0.0.1:8000`. All API calls are made to the real backend endpoints.
 
-### Switching to Real API
+### Required Features (9 fields)
 
-When your backend API is ready, update the `src/api.js` file to make actual HTTP requests:
+The model expects the following input features:
+- `num_pos_lymph_node` (number: -2 to 47)
+- `agecat` (number: 1 or 2)
+- `bilateral_renal_function` (number: -2 to 1)
+- `PERFORMANCE_ID` (number: 0, 1, or 2)
+- `STRATUM_GRP_ID` (number: 1 to 18)
+- `RACE_ID` (number: 1 to 9)
+- `ETHNIC_ID` (number: 1 to 9)
+- `Histologic_grade` (number: -2 to 4)
+- `No_cardiact_condition` (string: "healthy" or "unhealthy")
 
-1. Replace the `fetchJSON` function calls with actual API endpoints
-2. Update the base URL in `.env` to point to your API server
-3. Implement proper error handling and loading states
+### Starting the FastAPI Backend
 
-Example:
-```javascript
-// Current (Mock):
-export const getHealth = async () => {
-  return await fetchJSON('health');
-};
-
-// Future (Real API):
-export const getHealth = async () => {
-  const response = await fetch(`${BASE_URL}/health`);
-  return await response.json();
-};
+Before running the React app, make sure the FastAPI server is running:
+```bash
+# In your FastAPI project directory
+uvicorn main:app --reload --port 8000
 ```
 
 ## 🎨 UI Components

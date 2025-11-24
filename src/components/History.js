@@ -114,6 +114,7 @@ function History() {
     { name: 'ROC AUC', value: (metrics?.roc_auc * 100) || 0, color: '#ec4899' },
   ];
 
+  // Note: FastAPI metrics endpoint doesn't return confusion_matrix, using mock data
   const confusionMatrixData = metrics?.confusion_matrix ? [
     { name: 'True Positive', value: metrics.confusion_matrix.true_positive, color: '#10b981' },
     { name: 'False Positive', value: metrics.confusion_matrix.false_positive, color: '#f59e0b' },

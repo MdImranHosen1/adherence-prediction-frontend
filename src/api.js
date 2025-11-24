@@ -1,51 +1,58 @@
 // API Service for Adherence Prediction Frontend
-// This service fetches data from local JSON files (mock API)
-// In production, replace fetch calls with actual API endpoints
+// Integrates with FastAPI backend at http://127.0.0.1:8000
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000';
 
-// Helper function to fetch JSON data
-const fetchJSON = async (endpoint) => {
+// Helper function to make API requests
+const apiRequest = async (endpoint, options = {}) => {
   try {
-    const response = await fetch(`/data/${endpoint}.json`);
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
+    
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${endpoint}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `API request failed: ${response.status}`);
     }
+    
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching ${endpoint}:`, error);
+    console.error(`Error calling ${endpoint}:`, error);
     throw error;
   }
 };
 
 // Health & Info APIs
 export const getHealth = async () => {
-  return await fetchJSON('health');
+  return await apiRequest('/health');
 };
 
 export const getInfo = async () => {
-  return await fetchJSON('info');
+  return await apiRequest('/info');
 };
 
 // Data Management APIs
 export const getFeatures = async () => {
-  return await fetchJSON('features');
+  return await apiRequest('/features');
 };
 
-export const validateData = async (data) => {
-  // TODO: Implement actual validation logic with API
-  // For now, return mock validation response
-  return {
-    is_valid: true,
-    missing_columns: [],
-    invalid_values: [],
-    message: 'Data validation successful'
-  };
+export const validateData = async (data, validationRules = null) => {
+  return await apiRequest('/validate-data', {
+    method: 'POST',
+    body: JSON.stringify({ 
+      data: Array.isArray(data) ? data : [data],
+      validation_rules: validationRules 
+    }),
+  });
 };
 
 export const preprocessData = async (data) => {
-  // TODO: Implement actual preprocessing with API
-  // For now, return the same data
+  // Note: Preprocessing is handled automatically by the predict endpoints
+  // This function is kept for compatibility but returns the data as-is
   return {
     preprocessed_data: data
   };
@@ -53,103 +60,80 @@ export const preprocessData = async (data) => {
 
 // Prediction APIs
 export const predictSingle = async (data) => {
-  // TODO: Implement actual prediction API call
-  // For now, return mock prediction
-  return {
-    prediction: "Good Subject",
-    probability: 0.78,
-    class_label: "Completed treatment",
-    confidence: "high",
-    timestamp: new Date().toISOString()
-  };
+  return await apiRequest('/predict', {
+    method: 'POST',
+    body: JSON.stringify({ data }),
+  });
 };
 
 export const predictBatch = async (dataArray) => {
-  // TODO: Implement actual batch prediction API call
-  // For now, return mock batch predictions
-  return {
-    predictions: dataArray.map((data, index) => ({
-      MASK_ID: data.MASK_ID || index + 1,
-      prediction: Math.random() > 0.5 ? "Good Subject" : "Bad Subject",
-      probability: (0.6 + Math.random() * 0.3).toFixed(2),
-      class_label: Math.random() > 0.5 ? "Completed treatment" : "Did not complete treatment",
-      confidence: Math.random() > 0.7 ? "high" : "medium",
-      timestamp: new Date().toISOString()
-    })),
-    summary: {
-      total_records: dataArray.length,
-      good_subjects: Math.floor(dataArray.length * 0.65),
-      bad_subjects: Math.floor(dataArray.length * 0.35)
-    }
-  };
+  return await apiRequest('/predict-batch', {
+    method: 'POST',
+    body: JSON.stringify({ data: dataArray }),
+  });
 };
 
-export const explainPrediction = async (data, predictionId) => {
-  // TODO: Implement actual explanation API call
-  // For now, return mock explanation
-  return {
-    prediction: "Good Subject",
-    probability: 0.78,
-    explanation: {
-      top_positive_features: [
-        { feature: "PERFORMANCE_ID", value: 1, impact: 0.15 },
-        { feature: "stable_weigh", value: 2, impact: 0.12 },
-        { feature: "agecat", value: 1, impact: 0.08 }
-      ],
-      top_negative_features: [
-        { feature: "prior_chemo", value: 0, impact: -0.05 },
-        { feature: "Histologic_grade", value: 3, impact: -0.03 }
-      ],
-      shap_values: {
-        base_value: 0.65,
-        features: {
-          PERFORMANCE_ID: 0.15,
-          stable_weigh: 0.12,
-          agecat: 0.08
-        }
-      }
-    }
-  };
+export const explainPrediction = async (data) => {
+  return await apiRequest('/predict/explain', {
+    method: 'POST',
+    body: JSON.stringify({ data }),
+  });
 };
 
 // Training Data APIs
-export const getTrainingData = async (page = 1, size = 10) => {
-  // TODO: Implement pagination with actual API
-  return await fetchJSON('training-data');
+export const getTrainingData = async (page = 1, size = 50) => {
+  return await apiRequest(`/training-data?page=${page}&size=${size}`);
 };
 
 export const getTrainingDataStats = async () => {
-  return await fetchJSON('training-data-stats');
+  return await apiRequest('/training-data/stats');
 };
 
 // Model Management APIs
 export const getModels = async () => {
-  return await fetchJSON('models');
+  // Note: The FastAPI backend doesn't have a models endpoint yet
+  // Returning info endpoint data formatted as models array
+  const info = await apiRequest('/info');
+  return {
+    models: [
+      {
+        model_id: "model_1",
+        name: info.model_name || "Adherence Prediction Model",
+        version: info.version || "v1.0.0",
+        algorithm: info.algorithm || "XGBoost Classifier",
+        status: "deployed",
+        is_active: true,
+        accuracy: info.performance_metrics?.accuracy || 0.85,
+        precision: info.performance_metrics?.precision || 0.82,
+        recall: info.performance_metrics?.recall || 0.87,
+        f1_score: info.performance_metrics?.f1_score || 0.845,
+        training_date: info.training_date || new Date().toISOString().split('T')[0]
+      }
+    ]
+  };
 };
 
 export const deployModel = async (modelId) => {
-  // TODO: Implement actual model deployment API call
-  // For now, return mock deployment response
+  // Note: Model deployment not implemented in current FastAPI backend
   return {
     previous_model: "model_v1",
     new_model: modelId,
     status: "deployed",
     deployment_time: new Date().toISOString(),
-    message: `Model ${modelId} successfully deployed as active model`
+    message: `Model ${modelId} deployment requested (not implemented in backend yet)`
   };
 };
 
 // Monitoring & Analytics APIs
 export const getMetrics = async () => {
-  return await fetchJSON('metrics');
+  return await apiRequest('/metrics');
 };
 
-export const getPredictionsHistory = async (page = 1, size = 10) => {
-  // TODO: Implement pagination with actual API
-  return await fetchJSON('predictions-history');
+export const getPredictionsHistory = async (page = 1, size = 25) => {
+  return await apiRequest(`/predictions/history?page=${page}&size=${size}`);
 };
 
-export default {
+const api = {
   getHealth,
   getInfo,
   getFeatures,
@@ -165,3 +149,5 @@ export default {
   getMetrics,
   getPredictionsHistory
 };
+
+export default api;

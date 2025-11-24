@@ -116,8 +116,8 @@ function Dashboard() {
 
   // Prepare data for charts
   const targetDistributionData = [
-    { name: 'Good Subject', value: stats?.target_distribution?.['Good Subject'] || 0 },
-    { name: 'Bad Subject', value: stats?.target_distribution?.['Bad Subject'] || 0 },
+    { name: 'Good Subject', value: stats?.target_distribution?.['1'] || stats?.target_distribution?.['Good Subject'] || 0 },
+    { name: 'Bad Subject', value: stats?.target_distribution?.['0'] || stats?.target_distribution?.['Bad Subject'] || 0 },
   ];
 
   const performanceData = [

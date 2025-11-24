@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Grid,
@@ -14,7 +14,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Pagination,
 } from '@mui/material';
 import {
   Dataset,
@@ -34,11 +33,7 @@ function TrainingData() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
-  useEffect(() => {
-    fetchData();
-  }, [currentPage]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [trainingData, statsData] = await Promise.all([
@@ -54,7 +49,11 @@ function TrainingData() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading && !data) {
     return (
@@ -76,8 +75,8 @@ function TrainingData() {
 
   // Prepare chart data
   const targetChartData = stats?.target_distribution ? [
-    { name: 'Good Subject', value: stats.target_distribution['Good Subject'] },
-    { name: 'Bad Subject', value: stats.target_distribution['Bad Subject'] }
+    { name: 'Good Subject', value: stats.target_distribution['1'] || stats.target_distribution['Good Subject'] || 0 },
+    { name: 'Bad Subject', value: stats.target_distribution['0'] || stats.target_distribution['Bad Subject'] || 0 }
   ] : [];
 
   return (

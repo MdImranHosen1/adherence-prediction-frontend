@@ -72,37 +72,15 @@ function Prediction() {
   // Input method states
   const [inputMethod, setInputMethod] = useState('json'); // 'json' or 'form' or 'csv'
   const [formData, setFormData] = useState({
-    PERFORMANCE_ID: '',
-    Hx_oth_cancer: '',
-    stable_weigh: '',
-    examed_by_radiation_oncologist: '',
-    bilateral_renal_function: '',
-    No_cardiact_condition: '',
-    prior_chemo: '',
-    prior_radiation: '',
-    Gastro_esophageal_junction: '',
-    cardia: '',
-    fundus: '',
-    body_corpus: '',
-    antrum: '',
-    pylorus_pyloric_channel: '',
-    greater_curvature: '',
-    lesser_curvature: '',
-    stomach_NOS: '',
-    Histologic_grade: '',
-    num_lymph_node_examined: '',
     num_pos_lymph_node: '',
-    T_stage: '',
-    N_stage: '',
-    M_stage: '',
-    T2N0M0_spec: '',
-    PD_location: '',
-    ETHNIC_ID: '',
-    SEX_ID: '',
-    RACE_ID: '',
-    TREAT_ASSIGNED: '',
+    agecat: '',
+    bilateral_renal_function: '',
+    PERFORMANCE_ID: '',
     STRATUM_GRP_ID: '',
-    agecat: ''
+    RACE_ID: '',
+    ETHNIC_ID: '',
+    Histologic_grade: '',
+    No_cardiact_condition: ''
   });
   const [csvFile, setCsvFile] = useState(null);
   const [csvData, setCsvData] = useState([]);
@@ -231,79 +209,55 @@ function Prediction() {
   };
 
   const sampleSingleInput = {
-    PERFORMANCE_ID: 1,
-    Hx_oth_cancer: 1,
-    stable_weigh: 2,
-    examed_by_radiation_oncologist: 1,
-    bilateral_renal_function: 1,
-    No_cardiact_condition: 1,
-    prior_chemo: 0,
-    prior_radiation: 0,
-    Gastro_esophageal_junction: 0,
-    cardia: 0,
-    fundus: 0,
-    body_corpus: 1,
-    antrum: 0,
-    pylorus_pyloric_channel: 0,
-    greater_curvature: 0,
-    lesser_curvature: 0,
-    stomach_NOS: 0,
-    Histologic_grade: 3,
-    num_lymph_node_examined: 7,
     num_pos_lymph_node: 0,
-    T_stage: 2,
-    N_stage: 0,
-    M_stage: 0,
-    T2N0M0_spec: 2,
-    PD_location: null,
-    ETHNIC_ID: 1,
-    SEX_ID: 1,
-    RACE_ID: 1,
-    TREAT_ASSIGNED: 2,
+    agecat: 1,
+    bilateral_renal_function: 1,
+    PERFORMANCE_ID: 1,
     STRATUM_GRP_ID: 1,
-    agecat: 1
+    RACE_ID: 1,
+    ETHNIC_ID: 1,
+    Histologic_grade: 3,
+    No_cardiact_condition: "healthy"
   };
 
   const sampleBatchInput = [
-    { MASK_ID: 1, PERFORMANCE_ID: 1, agecat: 1, Hx_oth_cancer: 1 },
-    { MASK_ID: 2, PERFORMANCE_ID: 0, agecat: 2, Hx_oth_cancer: 0 }
+    {
+      num_pos_lymph_node: 0,
+      agecat: 1,
+      bilateral_renal_function: 1,
+      PERFORMANCE_ID: 1,
+      STRATUM_GRP_ID: 1,
+      RACE_ID: 1,
+      ETHNIC_ID: 1,
+      Histologic_grade: 3,
+      No_cardiact_condition: "healthy"
+    },
+    {
+      num_pos_lymph_node: 6,
+      agecat: 2,
+      bilateral_renal_function: 0,
+      PERFORMANCE_ID: 1,
+      STRATUM_GRP_ID: 11,
+      RACE_ID: 3,
+      ETHNIC_ID: 2,
+      Histologic_grade: 2,
+      No_cardiact_condition: "unhealthy"
+    }
   ];
 
   const loadSample = () => {
     if (predictionType === 'single') {
       if (inputMethod === 'form') {
         setFormData({
-          PERFORMANCE_ID: 1,
-          Hx_oth_cancer: 1,
-          stable_weigh: 2,
-          examed_by_radiation_oncologist: 1,
-          bilateral_renal_function: 1,
-          No_cardiact_condition: 1,
-          prior_chemo: 0,
-          prior_radiation: 0,
-          Gastro_esophageal_junction: 0,
-          cardia: 0,
-          fundus: 0,
-          body_corpus: 1,
-          antrum: 0,
-          pylorus_pyloric_channel: 0,
-          greater_curvature: 0,
-          lesser_curvature: 0,
-          stomach_NOS: 0,
-          Histologic_grade: 3,
-          num_lymph_node_examined: 7,
           num_pos_lymph_node: 0,
-          T_stage: 2,
-          N_stage: 0,
-          M_stage: 0,
-          T2N0M0_spec: 2,
-          PD_location: null,
-          ETHNIC_ID: 1,
-          SEX_ID: 1,
-          RACE_ID: 1,
-          TREAT_ASSIGNED: 2,
+          agecat: 1,
+          bilateral_renal_function: 1,
+          PERFORMANCE_ID: 1,
           STRATUM_GRP_ID: 1,
-          agecat: 1
+          RACE_ID: 1,
+          ETHNIC_ID: 1,
+          Histologic_grade: 3,
+          No_cardiact_condition: "healthy"
         });
       } else {
         setInputData(JSON.stringify(sampleSingleInput, null, 2));
@@ -313,39 +267,17 @@ function Prediction() {
     }
   };
 
-  // Field configurations for form
+  // Field configurations for form (matching FastAPI model)
   const fieldConfigs = {
+    num_pos_lymph_node: { label: 'Number of Positive Lymph Nodes', type: 'number', min: -2, max: 47 },
+    agecat: { label: 'Age Category', type: 'select', options: [1, 2] },
+    bilateral_renal_function: { label: 'Bilateral Renal Function', type: 'number', min: -2, max: 1 },
     PERFORMANCE_ID: { label: 'Performance Status', type: 'select', options: [0, 1, 2] },
-    Hx_oth_cancer: { label: 'History of Other Cancer', type: 'select', options: [0, 1] },
-    stable_weigh: { label: 'Stable Weight', type: 'select', options: [1, 2] },
-    examed_by_radiation_oncologist: { label: 'Examined by Radiation Oncologist', type: 'select', options: [0, 1] },
-    bilateral_renal_function: { label: 'Bilateral Renal Function', type: 'select', options: [0, 1] },
-    No_cardiact_condition: { label: 'No Cardiac Condition', type: 'select', options: [0, 1] },
-    prior_chemo: { label: 'Prior Chemotherapy', type: 'select', options: [0, 1] },
-    prior_radiation: { label: 'Prior Radiation', type: 'select', options: [0, 1] },
-    Gastro_esophageal_junction: { label: 'Gastroesophageal Junction', type: 'select', options: [0, 1] },
-    cardia: { label: 'Cardia', type: 'select', options: [0, 1] },
-    fundus: { label: 'Fundus', type: 'select', options: [0, 1] },
-    body_corpus: { label: 'Body/Corpus', type: 'select', options: [0, 1] },
-    antrum: { label: 'Antrum', type: 'select', options: [0, 1] },
-    pylorus_pyloric_channel: { label: 'Pylorus/Pyloric Channel', type: 'select', options: [0, 1] },
-    greater_curvature: { label: 'Greater Curvature', type: 'select', options: [0, 1] },
-    lesser_curvature: { label: 'Lesser Curvature', type: 'select', options: [0, 1] },
-    stomach_NOS: { label: 'Stomach NOS', type: 'select', options: [0, 1] },
-    Histologic_grade: { label: 'Histologic Grade', type: 'select', options: [1, 2, 3, 4] },
-    num_lymph_node_examined: { label: 'Number of Lymph Nodes Examined', type: 'number', min: 0 },
-    num_pos_lymph_node: { label: 'Number of Positive Lymph Nodes', type: 'number', min: 0 },
-    T_stage: { label: 'T Stage', type: 'select', options: [0, 1, 2, 3, 4] },
-    N_stage: { label: 'N Stage', type: 'select', options: [0, 1, 2, 3] },
-    M_stage: { label: 'M Stage', type: 'select', options: [0, 1] },
-    T2N0M0_spec: { label: 'T2N0M0 Specification', type: 'select', options: [1, 2, 3] },
-    PD_location: { label: 'PD Location', type: 'text' },
-    ETHNIC_ID: { label: 'Ethnicity', type: 'select', options: [1, 2, 3] },
-    SEX_ID: { label: 'Sex', type: 'select', options: [1, 2] },
-    RACE_ID: { label: 'Race', type: 'select', options: [1, 2, 3, 4, 5] },
-    TREAT_ASSIGNED: { label: 'Treatment Assigned', type: 'select', options: [1, 2] },
-    STRATUM_GRP_ID: { label: 'Stratum Group', type: 'select', options: [1, 2, 3] },
-    agecat: { label: 'Age Category', type: 'select', options: [1, 2, 3, 4] }
+    STRATUM_GRP_ID: { label: 'Stratum Group ID', type: 'select', options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] },
+    RACE_ID: { label: 'Race ID', type: 'select', options: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    ETHNIC_ID: { label: 'Ethnic ID', type: 'select', options: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    Histologic_grade: { label: 'Histologic Grade', type: 'number', min: -2, max: 4 },
+    No_cardiact_condition: { label: 'Cardiac Condition', type: 'select', options: ['healthy', 'unhealthy'] }
   };
 
   // Prepare chart data for batch predictions

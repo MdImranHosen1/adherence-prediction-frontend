@@ -25,7 +25,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from '@mui/icons-material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from 'recharts';
 import { explainPrediction } from '../api';
 
 function Explainability() {
