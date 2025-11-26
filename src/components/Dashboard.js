@@ -39,6 +39,7 @@ import {
   ShowChart,
   BubbleChart,
   Science,
+  Dashboard as DashboardIcon,
 } from '@mui/icons-material';
 import {
   BarChart,
@@ -150,7 +151,7 @@ function Dashboard() {
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-          Dashboard
+         <DashboardIcon /> Dashboard
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Overview of service health, model information, and training data analytics
@@ -625,25 +626,6 @@ function Dashboard() {
           </Card>
         </Grid>
       </Grid>
-
-      {/* Performance Bar Chart */}
-      <Card elevation={2} sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-            Performance Metrics Comparison
-          </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={performanceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="metric" tick={{ fill: '#64748b' }} />
-              <YAxis domain={[0, 100]} tick={{ fill: '#64748b' }} />
-              <RechartsTooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
 
       {/* Categorical Distribution Chart */}
       {categoricalData.length > 0 && (

@@ -146,7 +146,7 @@ function Sidebar() {
             <LocalHospital sx={{ fontSize: 32 }} />
           </Avatar>
           <Typography variant="h6" sx={{ fontWeight: 700, color: 'white' }}>
-            Adherence Predict
+            Patient Recruitment & Retention
           </Typography>
           <Chip
             label="v1.2.0"
@@ -243,10 +243,10 @@ function Sidebar() {
             🤖 AI-Powered Analytics
           </Typography>
           <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
-            Treatment Adherence
+            Patient Recruitment & Retention
           </Typography>
           <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block', mt: 1 }}>
-            © 2025 MedPredict AI
+            © 2025 RTL AI
           </Typography>
         </Paper>
       </Box>
