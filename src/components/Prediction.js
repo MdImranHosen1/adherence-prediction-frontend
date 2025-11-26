@@ -181,20 +181,12 @@ function Prediction() {
         const result = await predictSingle(parsedData);
         setPredictionResult(result);
       } else {
-        // Batch predictions
-        if (inputMethod === 'csv') {
-          // Use CSV data
-          if (csvData.length === 0) {
-            setError('Please upload a CSV file first');
-            return;
-          }
-          parsedData = csvData;
-        } else {
-          // Use JSON input
-          parsedData = JSON.parse(inputData);
-          parsedData = Array.isArray(parsedData) ? parsedData : [parsedData];
+        // Batch predictions - must use CSV file
+        if (!csvFile) {
+          setError('Please upload a CSV file for batch predictions');
+          return;
         }
-        const result = await predictBatch(parsedData);
+        const result = await predictBatch(csvFile);
         setPredictionResult(result);
       }
 
@@ -281,10 +273,9 @@ function Prediction() {
   };
 
   // Prepare chart data for batch predictions
-  const chartData = predictionResult && predictionType === 'batch' ? [
-    { name: 'Good Subject', value: predictionResult.summary?.good_subjects || 0 },
-    { name: 'Bad Subject', value: predictionResult.summary?.bad_subjects || 0 },
-  ] : [];
+  const chartData = predictionResult && predictionType === 'batch' && predictionResult.summary?.label_counts
+    ? Object.entries(predictionResult.summary.label_counts).map(([name, value]) => ({ name, value }))
+    : [];
 
   const confidenceData = predictionResult && predictionType === 'batch' 
     ? predictionResult.predictions?.reduce((acc, pred) => {
@@ -295,7 +286,7 @@ function Prediction() {
     : {};
 
   const confidenceChartData = Object.entries(confidenceData).map(([key, value]) => ({
-    confidence: key,
+    name: key,
     count: value
   }));
 
@@ -327,6 +318,12 @@ function Prediction() {
                 setPredictionType(newType);
                 setPredictionResult(null);
                 setInputData('');
+                // Automatically switch to CSV for batch predictions
+                if (newType === 'batch') {
+                  setInputMethod('csv');
+                } else if (newType === 'single' && inputMethod === 'csv') {
+                  setInputMethod('json');
+                }
               }
             }}
             aria-label="prediction type"
@@ -360,42 +357,38 @@ function Prediction() {
           </Box>
 
           {/* Input Method Tabs */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-              value={inputMethod} 
-              onChange={(e, newValue) => {
-                setInputMethod(newValue);
-                setPredictionResult(null);
-              }}
-              aria-label="input method tabs"
-            >
-              <Tab 
-                icon={<Code />} 
-                iconPosition="start" 
-                label="JSON Input" 
-                value="json" 
-              />
-              {predictionType === 'single' && (
+          {predictionType === 'single' ? (
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+              <Tabs 
+                value={inputMethod} 
+                onChange={(e, newValue) => {
+                  setInputMethod(newValue);
+                  setPredictionResult(null);
+                }}
+                aria-label="input method tabs"
+              >
+                <Tab 
+                  icon={<Code />} 
+                  iconPosition="start" 
+                  label="JSON Input" 
+                  value="json" 
+                />
                 <Tab 
                   icon={<Edit />} 
                   iconPosition="start" 
                   label="Form Input" 
                   value="form" 
                 />
-              )}
-              {predictionType === 'batch' && (
-                <Tab 
-                  icon={<UploadFile />} 
-                  iconPosition="start" 
-                  label="CSV Upload" 
-                  value="csv" 
-                />
-              )}
-            </Tabs>
-          </Box>
+              </Tabs>
+            </Box>
+          ) : (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Batch predictions require a CSV file upload. Please prepare your CSV with the required 9 fields.
+            </Alert>
+          )}
 
-          {/* JSON Input */}
-          {inputMethod === 'json' && (
+          {/* JSON Input (Single Prediction Only) */}
+          {inputMethod === 'json' && predictionType === 'single' && (
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Enter JSON data {predictionType === 'batch' ? '(array of objects)' : '(single object)'}
@@ -481,7 +474,7 @@ function Prediction() {
           )}
 
           {/* CSV Upload (Batch Prediction Only) */}
-          {inputMethod === 'csv' && predictionType === 'batch' && (
+          {predictionType === 'batch' && (
             <Box>
               <Alert severity="info" sx={{ mb: 3 }}>
                 Upload a CSV file containing multiple records for batch prediction. 
@@ -672,7 +665,7 @@ function Prediction() {
                 Batch Prediction Summary
               </Typography>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', height: '100%' }}>
                     <CardContent>
                       <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
@@ -684,26 +677,40 @@ function Prediction() {
                     </CardContent>
                   </Card>
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <Card sx={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: 'white', height: '100%' }}>
                     <CardContent>
                       <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
                         Good Subjects
                       </Typography>
                       <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                        {predictionResult.summary?.good_subjects}
+                        {predictionResult.summary?.label_counts?.['Good Subject'] || 0}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <Card sx={{ background: 'linear-gradient(135deg, #ee0979 0%, #ff6a00 100%)', color: 'white', height: '100%' }}>
                     <CardContent>
                       <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
                         Bad Subjects
                       </Typography>
                       <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                        {predictionResult.summary?.bad_subjects}
+                        {predictionResult.summary?.label_counts?.['Bad Subject'] || 0}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white', height: '100%' }}>
+                    <CardContent>
+                      <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
+                        Avg Probability
+                      </Typography>
+                      <Typography variant="h3" sx={{ fontWeight: 700 }}>
+                        {predictionResult.summary?.mean_probability 
+                          ? (predictionResult.summary.mean_probability * 100).toFixed(1) + '%'
+                          : 'N/A'}
                       </Typography>
                     </CardContent>
                   </Card>

@@ -23,13 +23,12 @@ import {
   ContentPaste,
   PlayArrow,
 } from '@mui/icons-material';
-import { getFeatures, validateData, preprocessData } from '../api';
+import { getFeatures, validateData } from '../api';
 
 function DataManagement() {
   const [features, setFeatures] = useState(null);
   const [inputData, setInputData] = useState('');
   const [validationResult, setValidationResult] = useState(null);
-  const [preprocessResult, setPreprocessResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -62,28 +61,16 @@ function DataManagement() {
     }
   };
 
-  const handlePreprocess = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const parsedData = JSON.parse(inputData);
-      const result = await preprocessData(parsedData);
-      setPreprocessResult(result);
-    } catch (err) {
-      setError('Invalid JSON format or preprocessing failed');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const sampleInput = {
-    PERFORMANCE_ID: 1,
-    Hx_oth_cancer: 1,
-    stable_weigh: 2,
+    num_pos_lymph_node: 0,
     agecat: 1,
-    num_lymph_node_examined: 7,
-    num_pos_lymph_node: 0
+    bilateral_renal_function: 1,
+    PERFORMANCE_ID: 1,
+    STRATUM_GRP_ID: 1,
+    RACE_ID: 1,
+    ETHNIC_ID: 1,
+    Histologic_grade: 3,
+    No_cardiact_condition: "healthy"
   };
 
   return (
@@ -224,27 +211,15 @@ function DataManagement() {
             }}
           />
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
-              onClick={handleValidate}
-              disabled={loading || !inputData}
-            >
-              Validate Data
-            </Button>
-            <Button
-              variant="contained"
-              color="success"
-              size="large"
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
-              onClick={handlePreprocess}
-              disabled={loading || !inputData}
-            >
-              Preprocess Data
-            </Button>
-          </Box>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrow />}
+            onClick={handleValidate}
+            disabled={loading || !inputData}
+          >
+            Validate Data
+          </Button>
         </CardContent>
       </Card>
 
@@ -256,9 +231,14 @@ function DataManagement() {
               Validation Result
             </Typography>
             {validationResult.is_valid ? (
-              <Alert severity="success" icon={<CheckCircle />}>
-                Data is valid and ready for prediction
-              </Alert>
+              <>
+                <Alert severity="success" icon={<CheckCircle />}>
+                  Data is valid and ready for prediction
+                </Alert>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Note: Data preprocessing is handled automatically during prediction.
+                </Typography>
+              </>
             ) : (
               <Alert severity="error" icon={<ErrorIcon />}>
                 Data validation failed
@@ -276,35 +256,42 @@ function DataManagement() {
                 </Box>
               </Box>
             )}
+            {validationResult.invalid_columns?.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                  Invalid Columns:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {validationResult.invalid_columns.map((col) => (
+                    <Chip key={col} label={col} color="warning" size="small" />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            {validationResult.extra_columns?.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                  Extra Columns:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {validationResult.extra_columns.map((col) => (
+                    <Chip key={col} label={col} color="info" size="small" />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            {validationResult.rows_with_errors > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'error.main' }}>
+                  Rows with errors: {validationResult.rows_with_errors}
+                </Typography>
+              </Box>
+            )}
             {validationResult.message && (
               <Typography variant="body2" sx={{ mt: 2 }}>
                 {validationResult.message}
               </Typography>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Preprocessing Result */}
-      {preprocessResult && (
-        <Card elevation={2}>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Preprocessing Result
-            </Typography>
-            <Alert severity="success" icon={<CheckCircle />} sx={{ mb: 2 }}>
-              Data preprocessed successfully
-            </Alert>
-            <Paper elevation={1} sx={{ 
-              p: 2, 
-              backgroundColor: '#f8fafc',
-              overflow: 'auto',
-              maxHeight: '400px'
-            }}>
-              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '13px' }}>
-                {JSON.stringify(preprocessResult.preprocessed_data, null, 2)}
-              </pre>
-            </Paper>
           </CardContent>
         </Card>
       )}

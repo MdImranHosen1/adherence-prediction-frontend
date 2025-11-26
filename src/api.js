@@ -66,11 +66,28 @@ export const predictSingle = async (data) => {
   });
 };
 
-export const predictBatch = async (dataArray) => {
-  return await apiRequest('/predict-batch', {
-    method: 'POST',
-    body: JSON.stringify({ data: dataArray }),
-  });
+export const predictBatch = async (file) => {
+  // The /predict-batch endpoint expects a CSV file upload
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  try {
+    const response = await fetch(`${BASE_URL}/predict-batch`, {
+      method: 'POST',
+      body: formData,
+      // Don't set Content-Type header - let browser set it with boundary
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `API request failed: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error calling /predict-batch:', error);
+    throw error;
+  }
 };
 
 export const explainPrediction = async (data) => {

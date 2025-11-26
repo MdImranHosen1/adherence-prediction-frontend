@@ -510,8 +510,8 @@ function Dashboard() {
                     elevation={1} 
                     sx={{ 
                       p: 2, 
-                      bgcolor: model.is_active ? '#f0fdf4' : '#f8fafc',
-                      border: model.is_active ? '2px solid #10b981' : '1px solid #e2e8f0'
+                      bgcolor: model.is_active ? '#07233fff' : '#07233fff',
+                      border: model.is_active ? '2px solid #10b981' : '1px solid #07233fff'
                     }}
                   >
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>

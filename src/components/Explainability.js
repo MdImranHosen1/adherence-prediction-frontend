@@ -50,12 +50,15 @@ function Explainability() {
   };
 
   const sampleInput = {
-    PERFORMANCE_ID: 1,
-    Hx_oth_cancer: 1,
-    stable_weigh: 2,
+    num_pos_lymph_node: 0,
     agecat: 1,
-    prior_chemo: 0,
-    Histologic_grade: 3
+    bilateral_renal_function: 1,
+    PERFORMANCE_ID: 1,
+    STRATUM_GRP_ID: 1,
+    RACE_ID: 1,
+    ETHNIC_ID: 1,
+    Histologic_grade: 3,
+    No_cardiact_condition: "healthy"
   };
 
   return (
