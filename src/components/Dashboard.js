@@ -160,18 +160,18 @@ function Dashboard() {
       {/* Service Health Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={4}>
-          <Card elevation={2} sx={{ height: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <Card elevation={2} sx={{ height: '100%', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Typography variant="h6" sx={{ color: 'white', mb: 1 }}>
-                    Service Status
+                    API Status
                   </Typography>
                   <Chip
                     icon={<CheckCircle />}
                     label={health?.status?.toUpperCase()}
                     color="success"
-                    sx={{ bgcolor: 'rgba(255,255,255,0.9)', fontWeight: 600 }}
+                    sx={{ bgcolor: 'rgba(255,255,255,0.95)', fontWeight: 600, color: '#000' }}
                   />
                 </Box>
                 <Timeline sx={{ fontSize: 50, color: 'rgba(255,255,255,0.8)' }} />
@@ -192,7 +192,7 @@ function Dashboard() {
                     icon={<CheckCircle />}
                     label={health?.model_status?.toUpperCase()}
                     color="info"
-                    sx={{ bgcolor: 'rgba(255,255,255,0.9)', fontWeight: 600 }}
+                    sx={{ bgcolor: 'rgba(255,255,255,0.95)', fontWeight: 600, color: '#000' }}
                   />
                 </Box>
                 <Assessment sx={{ fontSize: 50, color: 'rgba(255,255,255,0.8)' }} />
@@ -232,11 +232,22 @@ function Dashboard() {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">Model Name</Typography>
-                  <Typography variant="h6">{info?.model_name}</Typography>
+                  <Box sx={{ 
+                    mt: 0.5,
+                    p: 1.5, 
+                    bgcolor: 'primary.50', 
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'primary.200'
+                  }}>
+                    <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                      {info?.model_name}
+                    </Typography>
+                  </Box>
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">Version</Typography>
-                  <Chip label={info?.version} color="primary" size="small" />
+                  <Chip label={info?.version} color="primary" size="small" sx={{ mt: 0.5 }} />
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">Algorithm</Typography>
@@ -510,8 +521,8 @@ function Dashboard() {
                     elevation={1} 
                     sx={{ 
                       p: 2, 
-                      bgcolor: model.is_active ? '#07233fff' : '#07233fff',
-                      border: model.is_active ? '2px solid #10b981' : '1px solid #07233fff'
+                      bgcolor: model.is_active ? '#f0fdf4' : '#f8fafc',
+                      border: model.is_active ? '2px solid #10b981' : '1px solid #e2e8f0'
                     }}
                   >
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
