@@ -133,7 +133,7 @@ function TrainingData() {
                 Good Subjects
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                {stats?.target_distribution?.['Good Subject']}
+                {stats?.target_distribution?.['1'] || stats?.target_distribution?.['Good Subject'] || 0}
               </Typography>
             </CardContent>
           </Card>
@@ -145,7 +145,7 @@ function TrainingData() {
                 Bad Subjects
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 700 }}>
-                {stats?.target_distribution?.['Bad Subject']}
+                {stats?.target_distribution?.['0'] || stats?.target_distribution?.['Bad Subject'] || 0}
               </Typography>
             </CardContent>
           </Card>
