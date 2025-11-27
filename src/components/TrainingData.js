@@ -14,11 +14,17 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import {
   Dataset,
   NavigateBefore,
   NavigateNext,
+  FirstPage,
+  LastPage,
 } from '@mui/icons-material';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { getTrainingData, getTrainingDataStats } from '../api';
@@ -31,7 +37,7 @@ function TrainingData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
 
   const fetchData = useCallback(async () => {
     try {
@@ -263,61 +269,64 @@ function TrainingData() {
       {/* Training Data Records */}
       <Card elevation={2}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Training Records (Page {currentPage} of {totalPages})
+              Training Records
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="outlined"
-                startIcon={<NavigateBefore />}
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outlined"
-                endIcon={<NavigateNext />}
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </Box>
           </Box>
           <Paper elevation={1} sx={{ overflow: 'hidden' }}>
             <Box sx={{ overflowX: 'auto' }}>
               <Table>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell sx={{ fontWeight: 600 }}>MASK_ID</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>PERFORMANCE_ID</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Age Cat</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>History Cancer</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Stable Weight</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Lymph Nodes</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>T Stage</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>N Stage</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Performance ID</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Age Category</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Positive Lymph Nodes</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Bilateral Renal Function</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Stratum Group</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Race ID</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Ethnic ID</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Histologic Grade</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Cardiac Condition</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Target</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {data?.data?.map((record) => (
-                    <TableRow key={record.MASK_ID} hover>
-                      <TableCell>{record.MASK_ID}</TableCell>
-                      <TableCell>{record.PERFORMANCE_ID}</TableCell>
+                  {data?.data?.map((record, index) => (
+                    <TableRow 
+                      key={index} 
+                      hover
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: '#f8fafc'
+                        }
+                      }}
+                    >
+                      <TableCell>
+                        <code style={{ 
+                          backgroundColor: '#f1f5f9', 
+                          padding: '4px 8px', 
+                          borderRadius: '4px',
+                          fontSize: '13px'
+                        }}>
+                          {record.PERFORMANCE_ID}
+                        </code>
+                      </TableCell>
                       <TableCell>{record.agecat}</TableCell>
-                      <TableCell>{record.Hx_oth_cancer}</TableCell>
-                      <TableCell>{record.stable_weigh}</TableCell>
-                      <TableCell>{record.num_lymph_node_examined}</TableCell>
-                      <TableCell>{record.T_stage}</TableCell>
-                      <TableCell>{record.N_stage}</TableCell>
+                      <TableCell>{record.num_pos_lymph_node}</TableCell>
+                      <TableCell>{record.bilateral_renal_function}</TableCell>
+                      <TableCell>{record.STRATUM_GRP_ID}</TableCell>
+                      <TableCell>{record.RACE_ID}</TableCell>
+                      <TableCell>{record.ETHNIC_ID}</TableCell>
+                      <TableCell>{record.Histologic_grade}</TableCell>
+                      <TableCell>{record.No_cardiact_condition}</TableCell>
                       <TableCell>
                         <Chip
                           label={record.offtrt_reason === 1 ? 'Complete' : 'Incomplete'}
                           color={record.offtrt_reason === 1 ? 'success' : 'error'}
                           size="small"
+                          sx={{ fontWeight: 500 }}
                         />
                       </TableCell>
                     </TableRow>
@@ -326,9 +335,90 @@ function TrainingData() {
               </Table>
             </Box>
           </Paper>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
-            Showing records {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, data?.total_records)} of {data?.total_records}
-          </Typography>
+          
+          {/* Enhanced Pagination Controls */}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel>Rows per page</InputLabel>
+                <Select
+                  value={pageSize}
+                  label="Rows per page"
+                  onChange={(e) => {
+                    setPageSize(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <MenuItem value={5}>5</MenuItem>
+                  <MenuItem value={10}>10</MenuItem>
+                  <MenuItem value={25}>25</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                </Select>
+              </FormControl>
+              <Typography variant="body2" color="text.secondary">
+                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, data?.total_records || 0)} of {data?.total_records || 0} records
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FirstPage />}
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+              >
+                First
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<NavigateBefore />}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </Button>
+              
+              <FormControl size="small" sx={{ minWidth: 100 }}>
+                <InputLabel>Page</InputLabel>
+                <Select
+                  value={currentPage}
+                  label="Page"
+                  onChange={(e) => setCurrentPage(e.target.value)}
+                >
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <MenuItem key={page} value={page}>
+                      {page}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <Typography variant="body2" color="text.secondary">
+                of {totalPages}
+              </Typography>
+              
+              <Button
+                variant="outlined"
+                size="small"
+                endIcon={<NavigateNext />}
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                endIcon={<LastPage />}
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                Last
+              </Button>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
     </Box>

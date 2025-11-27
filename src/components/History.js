@@ -22,6 +22,15 @@ import {
   Avatar,
   IconButton,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   CheckCircle,
@@ -35,6 +44,11 @@ import {
   PieChart as PieChartIcon,
   CalendarToday,
   AccessTime,
+  FirstPage,
+  LastPage,
+  NavigateBefore,
+  NavigateNext,
+  Close,
 } from '@mui/icons-material';
 import {
   BarChart,
@@ -55,15 +69,17 @@ function History() {
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedPrediction, setSelectedPrediction] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [metricsData, historyData] = await Promise.all([
         getMetrics(),
-        getPredictionsHistory(currentPage + 1, pageSize)
+        getPredictionsHistory(currentPage, pageSize)
       ]);
       setMetrics(metricsData);
       setHistory(historyData);
@@ -79,15 +95,6 @@ function History() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const handleChangePage = (event, newPage) => {
-    setCurrentPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setPageSize(parseInt(event.target.value, 10));
-    setCurrentPage(0);
-  };
 
   if (loading && !metrics) {
     return (
@@ -585,88 +592,294 @@ function History() {
             <Visibility color="primary" /> Prediction History
           </Typography>
           
-          <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e2e8f0' }}>
-            <Table>
-              <TableHead sx={{ bgcolor: '#f8fafc' }}>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>Prediction ID</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Timestamp</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Prediction</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600 }}>Confidence</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Model</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 600 }}>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {history?.predictions?.map((prediction) => (
-                  <TableRow key={prediction.prediction_id} hover>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 500 }}>
-                        {prediction.prediction_id}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <AccessTime sx={{ fontSize: 16, color: '#64748b' }} />
-                        <Typography variant="body2">
-                          {new Date(prediction.timestamp).toLocaleString()}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        icon={prediction.prediction === 'Good Subject' ? <CheckCircle /> : <Cancel />}
-                        label={prediction.prediction}
-                        color={prediction.prediction === 'Good Subject' ? 'success' : 'error'}
-                        size="small"
-                        sx={{ fontWeight: 600 }}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={prediction.probability * 100} 
-                          sx={{ width: 60, height: 6, borderRadius: 3 }}
-                          color={prediction.probability > 0.8 ? 'success' : prediction.probability > 0.6 ? 'primary' : 'warning'}
-                        />
-                        <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 45 }}>
-                          {(prediction.probability * 100).toFixed(1)}%
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={prediction.model_name}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="View Details">
-                        <IconButton size="small" color="primary">
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
+          <Paper elevation={1} sx={{ overflow: 'hidden' }}>
+            <Box sx={{ overflowX: 'auto' }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                    <TableCell sx={{ fontWeight: 600 }}>Prediction ID</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Timestamp</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Prediction</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Probability</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Model</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {history?.predictions?.map((prediction) => (
+                    <TableRow 
+                      key={prediction.prediction_id} 
+                      hover
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: '#f8fafc'
+                        }
+                      }}
+                    >
+                      <TableCell>
+                        <code style={{ 
+                          backgroundColor: '#f1f5f9', 
+                          padding: '4px 8px', 
+                          borderRadius: '4px',
+                          fontSize: '13px'
+                        }}>
+                          {prediction.prediction_id}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(prediction.timestamp).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={prediction.prediction}
+                          color={prediction.prediction === 'Good Subject' ? 'success' : 'error'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={`${(prediction.probability * 100).toFixed(1)}%`}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>{prediction.model_name}</TableCell>
+                      <TableCell>
+                        <IconButton 
+                          size="small" 
+                          color="primary"
+                          onClick={() => {
+                            setSelectedPrediction(prediction);
+                            setDialogOpen(true);
+                          }}
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
+          </Paper>
 
-          <TablePagination
-            component="div"
-            count={history?.total_predictions || 0}
-            page={currentPage}
-            onPageChange={handleChangePage}
-            rowsPerPage={pageSize}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            sx={{ borderTop: '1px solid #e2e8f0' }}
-          />
+          {/* Enhanced Pagination Controls */}
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel>Rows per page</InputLabel>
+                <Select
+                  value={pageSize}
+                  label="Rows per page"
+                  onChange={(e) => {
+                    setPageSize(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <MenuItem value={5}>5</MenuItem>
+                  <MenuItem value={10}>10</MenuItem>
+                  <MenuItem value={25}>25</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                </Select>
+              </FormControl>
+              <Typography variant="body2" color="text.secondary">
+                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, history?.total_predictions || 0)} of {history?.total_predictions || 0} records
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<FirstPage />}
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+              >
+                First
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<NavigateBefore />}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </Button>
+              
+              <FormControl size="small" sx={{ minWidth: 80 }}>
+                <Select
+                  value={currentPage}
+                  onChange={(e) => setCurrentPage(e.target.value)}
+                >
+                  {Array.from({ length: Math.ceil((history?.total_predictions || 0) / pageSize) }, (_, i) => i + 1).map((page) => (
+                    <MenuItem key={page} value={page}>
+                      {page}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <Typography variant="body2" color="text.secondary">
+                of {Math.ceil((history?.total_predictions || 0) / pageSize)}
+              </Typography>
+              
+              <Button
+                variant="outlined"
+                size="small"
+                endIcon={<NavigateNext />}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage * pageSize >= (history?.total_predictions || 0)}
+              >
+                Next
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                endIcon={<LastPage />}
+                onClick={() => setCurrentPage(Math.ceil((history?.total_predictions || 0) / pageSize))}
+                disabled={currentPage * pageSize >= (history?.total_predictions || 0)}
+              >
+                Last
+              </Button>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
+
+      {/* Prediction Detail Dialog */}
+      <Dialog 
+        open={dialogOpen} 
+        onClose={() => setDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Visibility />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Prediction Details
+            </Typography>
+          </Box>
+          <IconButton
+            size="small"
+            onClick={() => setDialogOpen(false)}
+            sx={{ color: 'white' }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          {selectedPrediction && (
+            <Box>
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={6}>
+                  <Paper elevation={1} sx={{ p: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                    <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
+                      Prediction ID
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                      {selectedPrediction.prediction_id}
+                    </Typography>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Paper elevation={1} sx={{ p: 2, background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+                    <Typography variant="subtitle2" sx={{ opacity: 0.9, mb: 1 }}>
+                      Timestamp
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {new Date(selectedPrediction.timestamp).toLocaleString()}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ p: 2, textAlign: 'center', background: '#f8fafc' }}>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                      Prediction
+                    </Typography>
+                    <Chip
+                      label={selectedPrediction.prediction}
+                      color={selectedPrediction.prediction === 'Good Subject' ? 'success' : 'error'}
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ p: 2, textAlign: 'center', background: '#f8fafc' }}>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                      Probability
+                    </Typography>
+                    <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
+                      {(selectedPrediction.probability * 100).toFixed(1)}%
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ p: 2, textAlign: 'center', background: '#f8fafc' }}>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                      Model
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {selectedPrediction.model_name}
+                    </Typography>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              {selectedPrediction.input_data && (
+                <Paper elevation={1} sx={{ p: 2, mb: 2, background: '#f8fafc' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                    Input Data
+                  </Typography>
+                  <Paper elevation={0} sx={{ p: 2, backgroundColor: 'white', maxHeight: 300, overflow: 'auto' }}>
+                    <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '12px' }}>
+                      {JSON.stringify(selectedPrediction.input_data, null, 2)}
+                    </pre>
+                  </Paper>
+                </Paper>
+              )}
+
+              {selectedPrediction.metadata && (
+                <Paper elevation={1} sx={{ p: 2, background: '#f8fafc' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                    Additional Metadata
+                  </Typography>
+                  <Grid container spacing={1}>
+                    {Object.entries(selectedPrediction.metadata).map(([key, value]) => (
+                      <Grid item xs={12} key={key}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1, borderBottom: '1px solid #e5e7eb' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {key}:
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Paper>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setDialogOpen(false)} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

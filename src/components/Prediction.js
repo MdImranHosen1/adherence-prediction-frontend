@@ -46,6 +46,10 @@ import {
   UploadFile,
   Edit,
   Code,
+  FirstPage,
+  LastPage,
+  NavigateBefore,
+  NavigateNext,
 } from '@mui/icons-material';
 import {
   PieChart,
@@ -92,7 +96,7 @@ function Prediction() {
   const [selectedPrediction, setSelectedPrediction] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch prediction history on component mount
   useEffect(() => {
@@ -945,26 +949,77 @@ function Prediction() {
               </Paper>
 
               {/* Pagination */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, historyData?.total_predictions || 0)} of {historyData?.total_predictions || 0}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel>Rows per page</InputLabel>
+                    <Select
+                      value={pageSize}
+                      label="Rows per page"
+                      onChange={(e) => {
+                        setPageSize(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <MenuItem value={5}>5</MenuItem>
+                      <MenuItem value={10}>10</MenuItem>
+                      <MenuItem value={25}>25</MenuItem>
+                      <MenuItem value={50}>50</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Typography variant="body2" color="text.secondary">
+                    Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, historyData?.total_predictions || 0)} of {historyData?.total_predictions || 0} records
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    startIcon={<FirstPage />}
+                    onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
                   >
-                    Previous
+                    First
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
+                    startIcon={<NavigateBefore />}
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Prev
+                  </Button>
+                  <FormControl size="small" sx={{ minWidth: 80 }}>
+                    <Select
+                      value={currentPage}
+                      onChange={(e) => setCurrentPage(e.target.value)}
+                    >
+                      {Array.from({ length: Math.ceil((historyData?.total_predictions || 0) / pageSize) }, (_, i) => i + 1).map(page => (
+                        <MenuItem key={page} value={page}>{page}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Typography variant="body2" color="text.secondary">
+                    of {Math.ceil((historyData?.total_predictions || 0) / pageSize)}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    endIcon={<NavigateNext />}
                     onClick={() => setCurrentPage(currentPage + 1)}
                     disabled={currentPage * pageSize >= (historyData?.total_predictions || 0)}
                   >
                     Next
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    endIcon={<LastPage />}
+                    onClick={() => setCurrentPage(Math.ceil((historyData?.total_predictions || 0) / pageSize))}
+                    disabled={currentPage * pageSize >= (historyData?.total_predictions || 0)}
+                  >
+                    Last
                   </Button>
                 </Box>
               </Box>
